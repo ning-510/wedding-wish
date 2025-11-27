@@ -20,10 +20,19 @@
 
         body {
             font-family: 'Noto Serif TC', serif;
+            
+            /* 背景圖 (PNG) */
             background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('bg.png');
             background-size: cover;
-            background-position: center;
+            
+            /* --- 關鍵修改：針對直式照片優化 --- */
+            /* center top = 水平置中，垂直靠上 */
+            /* 這樣電腦版寬螢幕時，會優先保留照片上半部(頭部)，不會切到臉 */
+            background-position: center top;
+            
+            /* 電腦版維持 fixed 固定 */
             background-attachment: fixed;
+            
             background-color: var(--bg-color);
             color: var(--text-primary);
             margin: 0;
@@ -32,6 +41,14 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+        }
+
+        /* 手機版優化 */
+        @media (max-width: 768px) {
+            body {
+                /* 手機版改回 scroll，避免 iOS 放大 bug */
+                background-attachment: scroll;
+            }
         }
 
         header {
@@ -81,24 +98,22 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* --- 佈局容器修改 --- */
+        /* 佈局容器 */
         .message-container {
             width: 90%;
             max-width: 1100px;
             padding-bottom: 80px;
-            /* 使用 Flexbox 讓幾條直行並排 */
             display: flex;
             gap: 25px; 
-            align-items: flex-start; /* 頂部對齊 */
+            align-items: flex-start;
         }
 
-        /* 每一條直行 (Column) 的設定 */
         .masonry-column {
-            flex: 1; /* 平均分配寬度 */
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 25px; /* 上下卡片的間距 */
-            min-width: 0; /* 防止破版 */
+            gap: 25px;
+            min-width: 0;
         }
 
         .card {
@@ -108,14 +123,13 @@
             border-radius: 2px;
             opacity: 0;
             animation: fadeIn 0.8s forwards;
-            
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             transition: transform 0.3s ease;
         }
 
-        /* --- 隨機旋轉效果 --- */
+        /* 隨機旋轉 */
         .card:nth-child(even) { transform: rotate(1deg); }
         .card:nth-child(3n) { transform: rotate(-1deg); }
         .card:nth-child(5n) { transform: rotate(0deg) translateY(-2px); }
@@ -187,7 +201,6 @@
         const wall = document.getElementById('wall');
         const loading = document.getElementById('loading');
         
-        // 儲存抓到的資料，以便視窗縮放時重繪
         let cachedData = [];
 
         window.handleResponse = function(json) {
@@ -199,17 +212,14 @@
                 return;
             }
 
-            // 反轉資料 (最新的在上面)
             const rows = json.table.rows.slice().reverse();
             
-            // 整理有效資料
             cachedData = [];
             rows.forEach(row => {
                 if (!row.c) return;
                 let name = row.c[1] ? row.c[1].v : null;
                 let msg = row.c[2] ? row.c[2].v : null;
                 
-                // 容錯抓取
                 if (!name && row.c[2]) name = row.c[2].v;
                 if (!msg && row.c[3]) msg = row.c[3].v;
 
@@ -231,17 +241,14 @@
             }
         };
 
-        // 核心邏輯：依照螢幕寬度決定幾欄，並自動發牌
         function renderMasonry() {
             wall.innerHTML = '';
             
-            // 1. 決定欄數
             const width = window.innerWidth;
-            let colCount = 3; // 電腦預設 3 欄
-            if (width < 900) colCount = 2; // 平板 2 欄
-            if (width < 600) colCount = 1; // 手機 1 欄
+            let colCount = 3; 
+            if (width < 900) colCount = 2; 
+            if (width < 600) colCount = 1; 
 
-            // 2. 建立欄位 DOM
             const columns = [];
             for (let i = 0; i < colCount; i++) {
                 const col = document.createElement('div');
@@ -250,10 +257,8 @@
                 columns.push(col);
             }
 
-            // 3. 發牌！(依照順序：第1張給Col1, 第2張給Col2...)
             cachedData.forEach((item, index) => {
                 const targetCol = columns[index % colCount];
-                
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
@@ -276,7 +281,6 @@
             document.body.appendChild(script);
         }
 
-        // 監聽視窗大小改變，自動重新排版
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
