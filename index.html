@@ -18,20 +18,12 @@
             --bg-overlay: rgba(247, 247, 245, 0.85); 
         }
 
-        /* --- 修正重點 1：Body 基礎設定 --- */
         body {
             font-family: 'Noto Serif TC', serif;
-            
-            /* 背景圖 (PNG) */
             background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('bg.png');
-            background-size: cover;       /* 填滿畫面 */
-            
-            /* 電腦版維持 fixed (固定不動)，比較有質感 */
-            background-attachment: fixed; 
-            
-            /* 預設「置中」，但稍後手機版會改 */
-            background-position: center center;
-            
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             background-color: var(--bg-color);
             color: var(--text-primary);
             margin: 0;
@@ -41,19 +33,6 @@
             align-items: center;
             min-height: 100vh;
         }
-
-        /* --- 修正重點 2：針對手機/平板的背景優化 --- */
-        @media (max-width: 768px) {
-            body {
-                /* 手機上改為 scroll，解決 iPhone 背景過度放大的問題 */
-                background-attachment: scroll;
-                
-                /* 改為「上方置中」對齊 */
-                /* 這樣如果照片是橫的，手機是直的，至少人的頭(通常在上面)不會被切掉 */
-                background-position: top center; 
-            }
-        }
-        /* ------------------------------------- */
 
         header {
             text-align: center;
@@ -102,21 +81,24 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
+        /* --- 佈局容器修改 --- */
         .message-container {
             width: 90%;
             max-width: 1100px;
             padding-bottom: 80px;
+            /* 使用 Flexbox 讓幾條直行並排 */
             display: flex;
             gap: 25px; 
-            align-items: flex-start;
+            align-items: flex-start; /* 頂部對齊 */
         }
 
+        /* 每一條直行 (Column) 的設定 */
         .masonry-column {
-            flex: 1;
+            flex: 1; /* 平均分配寬度 */
             display: flex;
             flex-direction: column;
-            gap: 25px;
-            min-width: 0;
+            gap: 25px; /* 上下卡片的間距 */
+            min-width: 0; /* 防止破版 */
         }
 
         .card {
@@ -126,12 +108,14 @@
             border-radius: 2px;
             opacity: 0;
             animation: fadeIn 0.8s forwards;
+            
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             transition: transform 0.3s ease;
         }
 
+        /* --- 隨機旋轉效果 --- */
         .card:nth-child(even) { transform: rotate(1deg); }
         .card:nth-child(3n) { transform: rotate(-1deg); }
         .card:nth-child(5n) { transform: rotate(0deg) translateY(-2px); }
@@ -203,6 +187,7 @@
         const wall = document.getElementById('wall');
         const loading = document.getElementById('loading');
         
+        // 儲存抓到的資料，以便視窗縮放時重繪
         let cachedData = [];
 
         window.handleResponse = function(json) {
@@ -214,14 +199,17 @@
                 return;
             }
 
+            // 反轉資料 (最新的在上面)
             const rows = json.table.rows.slice().reverse();
             
+            // 整理有效資料
             cachedData = [];
             rows.forEach(row => {
                 if (!row.c) return;
                 let name = row.c[1] ? row.c[1].v : null;
                 let msg = row.c[2] ? row.c[2].v : null;
                 
+                // 容錯抓取
                 if (!name && row.c[2]) name = row.c[2].v;
                 if (!msg && row.c[3]) msg = row.c[3].v;
 
@@ -243,14 +231,17 @@
             }
         };
 
+        // 核心邏輯：依照螢幕寬度決定幾欄，並自動發牌
         function renderMasonry() {
             wall.innerHTML = '';
             
+            // 1. 決定欄數
             const width = window.innerWidth;
-            let colCount = 3; 
-            if (width < 900) colCount = 2; 
-            if (width < 600) colCount = 1; 
+            let colCount = 3; // 電腦預設 3 欄
+            if (width < 900) colCount = 2; // 平板 2 欄
+            if (width < 600) colCount = 1; // 手機 1 欄
 
+            // 2. 建立欄位 DOM
             const columns = [];
             for (let i = 0; i < colCount; i++) {
                 const col = document.createElement('div');
@@ -259,8 +250,10 @@
                 columns.push(col);
             }
 
+            // 3. 發牌！(依照順序：第1張給Col1, 第2張給Col2...)
             cachedData.forEach((item, index) => {
                 const targetCol = columns[index % colCount];
+                
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
@@ -283,6 +276,7 @@
             document.body.appendChild(script);
         }
 
+        // 監聽視窗大小改變，自動重新排版
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
