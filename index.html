@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Guestbook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Serif+TC:wght@300;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #F7F7F5;
+            --card-bg: #FFFFFF;
+            --text-primary: #2C2C2C;
+            --text-secondary: #888888;
+            --accent-color: #A69B95;
+            --bg-overlay: rgba(247, 247, 245, 0.85); 
+        }
+
+        body {
+            font-family: 'Noto Serif TC', serif;
+            /* 背景設定 (維持您原本的) */
+            background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('bg.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 50px 20px 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-family: 'Great Vibes', cursive; 
+            font-weight: 400;
+            margin: 0 0 15px 0;
+            font-size: 3.5rem; 
+            color: var(--text-primary);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .sub-title {
+            font-family: 'Noto Serif TC', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #4A4A4A;
+            letter-spacing: 0.15em;
+            margin-bottom: 30px;
+        }
+
+        .cta-container {
+            margin-bottom: 40px;
+        }
+
+        .write-btn {
+            text-decoration: none;
+            background-color: var(--text-primary);
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 2px;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .write-btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* --- 修改重點：改為瀑布流排版 --- */
+        .message-grid {
+            width: 90%;
+            max-width: 1100px;
+            /* 使用 CSS Columns 創造瀑布流效果 */
+            column-count: 3;  /* 電腦版顯示 3 排 */
+            column-gap: 25px; /* 卡片左右間距 */
+            padding-bottom: 80px;
+        }
+
+        /* 手機版調整 */
+        @media (max-width: 900px) {
+            .message-grid {
+                column-count: 2; /* 平板顯示 2 排 */
+            }
+        }
+        @media (max-width: 600px) {
+            .message-grid {
+                column-count: 1; /* 手機顯示 1 排 (不然會太擠) */
+            }
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06); /* 陰影稍微加深一點，更有層次 */
+            border-radius: 2px;
+            opacity: 0;
+            animation: fadeIn 0.8s forwards;
+            
+            /* 瀑布流關鍵設定：避免卡片被切斷 */
+            break-inside: avoid;
+            margin-bottom: 25px; /* 卡片上下間距 */
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s ease;
+        }
+
+        /* --- 修改重點：隨機旋轉效果 (模擬手貼便條紙) --- */
+        /* 偶數卡片向右歪 1 度 */
+        .card:nth-child(even) {
+            transform: rotate(1deg);
+        }
+        /* 3的倍數卡片向左歪 1 度 */
+        .card:nth-child(3n) {
+            transform: rotate(-1deg);
+        }
+        /* 5的倍數卡片不旋轉，但稍微往上浮一點 */
+        .card:nth-child(5n) {
+            transform: rotate(0deg) translateY(-2px);
+        }
+        
+        /* 滑鼠移上去時，卡片擺正並浮起 */
+        .card:hover {
+            transform: rotate(0deg) scale(1.02) !important;
+            z-index: 10;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        /* ------------------------------------------- */
+
+        .card-msg {
+            font-size: 1.25rem;
+            font-weight: 500;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .card-footer {
+            text-align: right;
+            border-top: 1px solid #EEE;
+            padding-top: 15px;
+        }
+
+        .card-name {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .loading {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Wedding Guestbook</h1>
+        <div class="sub-title">勝翔 & 逸甯 • 2025.11.30</div>
+        
+        <div class="cta-container">
+            <a href="#" target="_blank" class="write-btn" id="formLink">
+                Write a Message
+            </a>
+        </div>
+    </header>
+
+    <div id="loading" class="loading">Loading messages...</div>
+    <div class="message-grid" id="wall"></div>
+
+    <script>
+        // ==========================================
+        const sheetID = '1BlBaCL_yId_ZSqoXMl4NQLVuSA3ZTrofQUcYgR0Pd0w'; 
+        const sheetGID = '770491860'; 
+        const formURL = 'https://forms.gle/Y2782jrQhVFeJVvXA';
+        // ==========================================
+
+        document.getElementById('formLink').href = formURL;
+        const wall = document.getElementById('wall');
+        const loading = document.getElementById('loading');
+
+        window.handleResponse = function(json) {
+            loading.style.display = 'none';
+            wall.innerHTML = '';
+            
+            if (!json.table || !json.table.rows || json.table.rows.length === 0) {
+                loading.style.display = 'block';
+                loading.innerText = "目前尚無留言，歡迎搶頭香！";
+                return;
+            }
+
+            const rows = json.table.rows.slice().reverse();
+            let count = 0;
+
+            rows.forEach(row => {
+                if (!row.c) return;
+                let name = row.c[1] ? row.c[1].v : null;
+                let msg = row.c[2] ? row.c[2].v : null;
+
+                if (!name && row.c[2]) name = row.c[2].v;
+                if (!msg && row.c[3]) msg = row.c[3].v;
+
+                if (name && msg) {
+                    name = String(name);
+                    msg = String(msg);
+                    
+                    if (name.includes("名字") || name.includes("Name")) return;
+                    if (msg.includes("祝福") || msg.includes("Message")) return;
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `<div class="card-msg">${msg}</div><div class="card-footer"><span class="card-name">${name}</span></div>`;
+                    wall.appendChild(card);
+                    count++;
+                }
+            });
+
+            if(count === 0) {
+                loading.style.display = 'block';
+                loading.innerText = "目前尚無留言";
+            }
+        };
+
+        function fetchMessages() {
+            const oldScript = document.getElementById('jsonp-script');
+            if (oldScript) oldScript.remove();
+            const script = document.createElement('script');
+            script.id = 'jsonp-script';
+            script.src = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=responseHandler:handleResponse&gid=${sheetGID}&t=${Date.now()}`;
+            script.onerror = function() { loading.innerText = "網路連線異常"; };
+            document.body.appendChild(script);
+        }
+
+        fetchMessages();
+        setInterval(fetchMessages, 10000);
+    </script>
+</body>
+</html>
