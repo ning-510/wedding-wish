@@ -18,20 +18,19 @@
             --bg-overlay: rgba(247, 247, 245, 0.85); 
         }
 
+        /* --- 修正重點 1：Body 基礎設定 --- */
         body {
             font-family: 'Noto Serif TC', serif;
             
             /* 背景圖 (PNG) */
             background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('bg.png');
-            background-size: cover;
+            background-size: cover;       /* 填滿畫面 */
             
-            /* --- 關鍵修改：針對直式照片優化 --- */
-            /* center top = 水平置中，垂直靠上 */
-            /* 這樣電腦版寬螢幕時，會優先保留照片上半部(頭部)，不會切到臉 */
-            background-position: center top;
+            /* 電腦版維持 fixed (固定不動)，比較有質感 */
+            background-attachment: fixed; 
             
-            /* 電腦版維持 fixed 固定 */
-            background-attachment: fixed;
+            /* 預設「置中」，但稍後手機版會改 */
+            background-position: center center;
             
             background-color: var(--bg-color);
             color: var(--text-primary);
@@ -43,13 +42,18 @@
             min-height: 100vh;
         }
 
-        /* 手機版優化 */
+        /* --- 修正重點 2：針對手機/平板的背景優化 --- */
         @media (max-width: 768px) {
             body {
-                /* 手機版改回 scroll，避免 iOS 放大 bug */
+                /* 手機上改為 scroll，解決 iPhone 背景過度放大的問題 */
                 background-attachment: scroll;
+                
+                /* 改為「上方置中」對齊 */
+                /* 這樣如果照片是橫的，手機是直的，至少人的頭(通常在上面)不會被切掉 */
+                background-position: top center; 
             }
         }
+        /* ------------------------------------- */
 
         header {
             text-align: center;
@@ -98,7 +102,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* 佈局容器 */
         .message-container {
             width: 90%;
             max-width: 1100px;
@@ -129,7 +132,6 @@
             transition: transform 0.3s ease;
         }
 
-        /* 隨機旋轉 */
         .card:nth-child(even) { transform: rotate(1deg); }
         .card:nth-child(3n) { transform: rotate(-1deg); }
         .card:nth-child(5n) { transform: rotate(0deg) translateY(-2px); }
